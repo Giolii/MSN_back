@@ -4,6 +4,8 @@
   "description": "",
   "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "build": "npx prisma generate",
     "test": "NODE_ENV=test jest"
   },
   "author": "",
