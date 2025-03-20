@@ -8,6 +8,7 @@ const port = process.env.PORT;
 const authRoutes = require("./routes/authRoutes");
 const convRoutes = require("./routes/convRoutes");
 const messagesRoutes = require("./routes/messageRoutes");
+const fileRoutes = require("./routes/fileRoutes");
 
 require("./config/passport");
 
@@ -37,6 +38,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/conv", convRoutes);
 app.use("/messages", messagesRoutes);
+app.use("/files", fileRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

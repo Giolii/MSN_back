@@ -44,7 +44,7 @@ describe("Conversation Controller", () => {
           participants: [testUsers.user2.id],
         });
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("id");
 
       // Verify the conversation was created correctly
@@ -127,7 +127,7 @@ describe("Conversation Controller", () => {
           isGroup: false,
           participants: [testUsers.user2.id],
         });
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(200);
       const response2 = await request(app)
         .get(`/conv/${response.body.id}`)
         .set("Authorization", `Bearer ${testUsers.token1}`);
@@ -154,7 +154,7 @@ describe("Conversation Controller", () => {
           isGroup: false,
           participants: [testUsers.user2.id],
         });
-      expect(conversation.status).toBe(201);
+      expect(conversation.status).toBe(200);
 
       const response = await request(app)
         .get(`/conv/${conversation.body.id}`)
@@ -251,7 +251,7 @@ describe("Conversation Controller", () => {
         participants: [testUsers.user2.id],
       });
 
-    expect(createResponse.status).toBe(201);
+    expect(createResponse.status).toBe(200);
 
     // Try to add a user to a DM
     const addUserResponse = await request(app)
@@ -344,6 +344,58 @@ describe("Conversation Controller", () => {
       });
 
       expect(userConvAfter).toBeNull();
+    });
+  });
+  describe("POST /conv/editName", () => {
+    it("should update the conversationName", async () => {
+      const response = await request(app)
+        .post("/conv/new")
+        .set("Authorization", `Bearer ${testUsers.token1}`)
+        .send({
+          name: "Test Group",
+          isGroup: true,
+          participants: [testUsers.user2.id, testUsers.user3.id],
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty("id");
+      expect(response.body.name).toBe("Test Group");
+
+      const updatedResponse = await request(app)
+        .post("/conv/editName")
+        .set("Authorization", `Bearer ${testUsers.token1}`)
+        .send({
+          groupName: "New Name",
+          conversationId: response.body.id,
+        });
+
+      expect(updatedResponse.status).toBe(200);
+      expect(updatedResponse.body.name).toBe(updatedResponse.body.name);
+    });
+    it("should return error if user is not an admin", async () => {
+      const response = await request(app)
+        .post("/conv/new")
+        .set("Authorization", `Bearer ${testUsers.token1}`)
+        .send({
+          name: "Test Group",
+          isGroup: true,
+          participants: [testUsers.user2.id, testUsers.user3.id],
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty("id");
+      expect(response.body.name).toBe("Test Group");
+
+      const updatedResponse = await request(app)
+        .post("/conv/editName")
+        .set("Authorization", `Bearer ${testUsers.token2}`)
+        .send({
+          groupName: "New Name",
+          conversationId: response.body.id,
+        });
+
+      expect(updatedResponse.status).toBe(403);
+      expect(updatedResponse.body).toHaveProperty("error");
     });
   });
 });

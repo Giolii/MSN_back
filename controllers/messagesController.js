@@ -69,8 +69,13 @@ const messagesController = {
   },
 
   async createMessage(req, res) {
-    const { content, conversationId } = req.body;
-    if (!content || !conversationId) {
+    const {
+      content,
+      conversationId,
+      notification = false,
+      imageUrl,
+    } = req.body;
+    if ((!content && !imageUrl) || !conversationId) {
       return res
         .status(400)
         .json({ error: "You need to provide content and conversation ID" });
@@ -105,6 +110,8 @@ const messagesController = {
           content,
           senderId: req.user.id,
           conversationId,
+          notification,
+          imageUrl,
         },
         include: {
           sender: {
@@ -135,6 +142,7 @@ const messagesController = {
   },
   async deleteMessage(req, res) {
     const { messageId } = req.body;
+
     if (!messageId) {
       return res.status(400).json({ error: "Message ID is required" });
     }

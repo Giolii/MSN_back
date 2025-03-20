@@ -41,20 +41,6 @@ const conversationController = {
               },
             },
           },
-          messages: {
-            orderBy: {
-              createdAt: "desc",
-            },
-            take: 1,
-            include: {
-              sender: {
-                select: {
-                  id: true,
-                  username: true,
-                },
-              },
-            },
-          },
         },
         orderBy: {
           updatedAt: "desc",
@@ -62,29 +48,7 @@ const conversationController = {
         take: 50,
       });
 
-      const formattedResult = result.map((conv) => ({
-        id: conv.id,
-        name: conv.name,
-        isGroup: conv.isGroup,
-        createdAt: conv.createdAt,
-        updatedAt: conv.updatedAt,
-        participants: conv.participants.map((p) => ({
-          id: p.user.id,
-          username: p.user.username,
-          name: p.user.name,
-          avatar: p.user.avatar,
-          isAdmin: p.isAdmin,
-        })),
-        latestMessage: conv.messages[0]
-          ? {
-              content: conv.messages[0].content,
-              sender: conv.messages[0].sender.username,
-              createdAt: conv.messages[0].createdAt,
-            }
-          : null,
-      }));
-
-      return res.status(200).json(formattedResult);
+      return res.status(200).json(result);
     } catch (error) {
       console.error("Error fetching conversations", error);
       return res.status(500).json({ error: "Failed to fetch conversations" });
@@ -132,6 +96,9 @@ const conversationController = {
                   username: true,
                   name: true,
                   avatar: true,
+                  email: true,
+                  createdAt: true,
+                  aboutMe: true,
                 },
               },
             },
@@ -161,37 +128,7 @@ const conversationController = {
         });
       }
 
-      const formattedConversation = {
-        id: conversation.id,
-        name: conversation.name,
-        isGroup: conversation.isGroup,
-        createdAt: conversation.createdAt,
-        updatedAt: conversation.updatedAt,
-        participants: conversation.participants.map((p) => ({
-          id: p.user.id,
-          username: p.user.username,
-          avatar: p.user.avatar,
-          isAdmin: p.isAdmin,
-          active: p.leftAt === null,
-        })),
-        messages: conversation.messages
-          .map((m) => ({
-            id: m.id,
-            content: m.content,
-            sender: {
-              id: m.sender.id,
-              username: m.sender.username,
-              name: m.sender.name,
-              avatar: m.sender.avatar,
-            },
-            createdAt: m.createdAt,
-            isRead: m.isRead,
-            readAt: m.readAt,
-          }))
-          .reverse(),
-      };
-
-      return res.status(200).json(formattedConversation);
+      return res.status(200).json(conversation);
     } catch (error) {
       console.error("Error fetching single conversation", error);
       return res
@@ -203,6 +140,12 @@ const conversationController = {
   // New conversation
   async newConv(req, res) {
     const { name = null, isGroup = false, participants } = req.body;
+
+    if (isGroup && !name.trim()) {
+      return res.status(400).json({
+        error: "The group need a name",
+      });
+    }
     if (!participants || !Array.isArray(participants)) {
       return res.status(400).json({
         error: "Participants must be provided as an array",
@@ -228,10 +171,37 @@ const conversationController = {
     }
 
     try {
+      // Check for an existing coversation between 2 users
+      if (participants.length === 1) {
+        const existingConversation = await prisma.conversation.findFirst({
+          where: {
+            isGroup: false,
+            participants: {
+              every: {
+                userId: {
+                  in: [req.user.id, participants[0]],
+                },
+                leftAt: null,
+              },
+            },
+          },
+          include: {
+            participants: true, // Add this if you need participant details
+          },
+        });
+        // Does work the left at implementation?
+        if (existingConversation) {
+          return res.status(403).json({
+            error: "The conversation with the user already exists",
+          });
+        }
+      }
+
       const result = await prisma.$transaction(async (tx) => {
         const conversation = await tx.conversation.create({
           data: {
-            name,
+            // name: participants.length === 1 ? participants[0].username : name,
+            name: name,
             isGroup,
           },
         });
@@ -243,7 +213,26 @@ const conversationController = {
             isAdmin: userId === req.user.id && isGroup,
           })),
         });
-        return conversation;
+        return tx.conversation.findUnique({
+          where: {
+            id: conversation.id,
+          },
+          include: {
+            participants: {
+              where: { leftAt: null },
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                    name: true,
+                    avatar: true,
+                  },
+                },
+              },
+            },
+          },
+        });
       });
       return res.status(201).json(result);
     } catch (error) {
@@ -259,6 +248,17 @@ const conversationController = {
         return res
           .status(400)
           .json({ error: "You have to provide a conversationId" });
+      }
+
+      const conversation = await prisma.conversation.findUnique({
+        where: {
+          id: req.body.conversationId,
+        },
+      });
+      if (!conversation) {
+        return res
+          .status(400)
+          .json({ error: "THis conversation doesn't exist" });
       }
 
       const existingRecord = await prisma.userConversation.findUnique({
@@ -288,7 +288,63 @@ const conversationController = {
         },
       });
 
-      return res.status(200).json({ message: "You left the conversation" });
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("Error leaving the conversation", error);
+      return res
+        .status(500)
+        .json({ error: "Failed to leave the conversation" });
+    }
+  },
+
+  // Mistake, already had one with same thing
+  async removeUser(req, res) {
+    const { conversationId, userToRemove } = req.body;
+    try {
+      if (!conversationId || !userToRemove) {
+        return res
+          .status(400)
+          .json({ error: "You have to provide a conversationId and a user" });
+      }
+
+      const existingRecord = await prisma.userConversation.findUnique({
+        where: {
+          userId_conversationId: {
+            userId: userToRemove.id,
+            conversationId: req.body.conversationId,
+          },
+        },
+      });
+
+      if (existingRecord?.leftAt) {
+        return res.status(400).json({ error: "You removed already this user" });
+      }
+
+      const adminCheck = await prisma.userConversation.findUnique({
+        where: {
+          userId_conversationId: {
+            userId: req.user.id,
+            conversationId: conversationId,
+          },
+        },
+      });
+      if (!adminCheck || !adminCheck.isAdmin) {
+        return res.status(403).json({ error: "Only admins can remove users" });
+      }
+
+      const result = await prisma.userConversation.update({
+        where: {
+          userId_conversationId: {
+            userId: userToRemove.id,
+            conversationId: conversationId,
+          },
+        },
+        data: {
+          leftAt: new Date(),
+        },
+      });
+
+      return res.status(200).json(result);
     } catch (error) {
       console.error("Error leaving the conversation", error);
       return res
@@ -418,8 +474,6 @@ const conversationController = {
         });
       }
 
-      // Check User
-
       const userConv = await prisma.userConversation.findFirst({
         where: {
           userId: req.user.id,
@@ -431,7 +485,7 @@ const conversationController = {
       if (!userConv || !userConv.isAdmin) {
         return res
           .status(403)
-          .json({ error: "Only admins can add participants" });
+          .json({ error: "Only admins can remove participants" });
       }
 
       const participantConv = await prisma.userConversation.findUnique({
@@ -466,14 +520,82 @@ const conversationController = {
           leftAt: new Date(),
         },
       });
-      return res
-        .status(200)
-        .json({ message: "Participant removed successfully" });
+      return res.status(200).json(result);
     } catch (error) {
       console.error("Error removing user from the conversation", error);
       return res
         .status(500)
         .json({ error: "Failed to remove users from the conversation" });
+    }
+  },
+
+  async editConvName(req, res) {
+    const { conversationId, groupName } = req.body;
+    if (!conversationId || !groupName.trim()) {
+      return res
+        .status(400)
+        .json({ error: "You need to provide ConversationId and new Name" });
+    }
+
+    if (groupName.trim().length > 100) {
+      // Set reasonable max length
+      return res.status(400).json({
+        error: "Conversation name cannot exceed 100 characters",
+      });
+    }
+    try {
+      const userConversation = await prisma.userConversation.findUnique({
+        where: {
+          userId_conversationId: {
+            // Using the composite unique constraint
+            userId: req.user.id,
+            conversationId: conversationId,
+          },
+        },
+      });
+
+      if (!userConversation) {
+        return res
+          .status(404)
+          .json({ error: "You are not part of this conversation" });
+      }
+      if (!userConversation.isAdmin) {
+        return res.status(403).json({ error: "You are not an admin" });
+      }
+
+      const conversation = await prisma.conversation.update({
+        where: {
+          id: conversationId,
+        },
+        data: {
+          name: groupName,
+        },
+        include: {
+          participants: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  name: true,
+                  avatar: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!conversation) {
+        return res.status(400).json({ error: "Conversation not found" });
+      }
+
+      return res.status(200).json(conversation);
+    } catch (error) {
+      console.error("Error updating conversation name", error);
+      return res
+        .status(500)
+        .json({ error: "Failed to update conversation name" });
     }
   },
 };
