@@ -1,10 +1,5 @@
 const request = require("supertest");
-const {
-  prisma,
-  createTestApp,
-  createTestUsers,
-  cleanDatabase,
-} = require("./setup");
+const { createTestApp, createTestUsers, cleanDatabase } = require("./setup");
 const messagesRoutes = require("../routes/messageRoutes");
 
 describe("Messages Controller", () => {

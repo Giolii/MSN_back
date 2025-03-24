@@ -1,11 +1,5 @@
-// test/auth.test.js
 const request = require("supertest");
-const {
-  prisma,
-  createTestApp,
-  cleanDatabase,
-  createTestUsers,
-} = require("./setup");
+const { createTestApp, cleanDatabase, createTestUsers } = require("./setup");
 const authRoutes = require("../routes/authRoutes");
 
 describe("Auth Controller", () => {

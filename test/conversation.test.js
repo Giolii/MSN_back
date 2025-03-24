@@ -1,10 +1,5 @@
 const request = require("supertest");
-const {
-  prisma,
-  createTestApp,
-  createTestUsers,
-  cleanDatabase,
-} = require("./setup");
+const { createTestApp, createTestUsers, cleanDatabase } = require("./setup");
 const convRoutes = require("../routes/convRoutes");
 
 describe("Conversation Controller", () => {
@@ -24,15 +19,6 @@ describe("Conversation Controller", () => {
   afterAll(async () => {
     await cleanDatabase();
   });
-
-  //   // Reset database state between test cases if needed
-  //   afterEach(async () => {
-  //     // Clean up specific data if needed between tests
-  //     await prisma.message.deleteMany({});
-  //     await prisma.userConversation.deleteMany({});
-  //     await prisma.conversation.deleteMany({});
-  //     // Don't delete users as they're reused between tests
-  //   });
 
   describe("POST /conv/new", () => {
     it("should create a new direct message conversation", async () => {

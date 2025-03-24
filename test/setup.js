@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const express = require("express");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
+const prisma = require("../config/prisma");
 
 const createTestApp = () => {
   const app = express();
@@ -11,14 +12,6 @@ const createTestApp = () => {
   app.use(passport.initialize());
   return app;
 };
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.TEST_DATABASE_URL,
-    },
-  },
-});
 
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET);
