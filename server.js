@@ -39,7 +39,7 @@ app.use("/auth", authRoutes);
 app.use("/conv", convRoutes);
 app.use("/messages", messagesRoutes);
 app.use("/files", fileRoutes);
-app.use("/user", userRoutes);
+app.use("/users", userRoutes);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

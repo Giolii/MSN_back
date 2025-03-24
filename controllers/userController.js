@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const { userFields } = require("../utils/sanitizeUser");
 
 const userController = {
   async allUsers(req, res) {
@@ -13,6 +14,7 @@ const userController = {
         orderBy: {
           username: "asc",
         },
+        select: userFields,
       });
 
       return res.status(200).json(users);
@@ -43,6 +45,7 @@ const userController = {
             },
           },
         },
+        select: userFields,
       });
 
       return res.status(200).json(addFriend);
@@ -71,6 +74,7 @@ const userController = {
           id: req.user.id,
         },
         data,
+        select: userFields,
       });
 
       if (!result) {
@@ -95,7 +99,7 @@ const userController = {
     if (!friendId) {
       return res
         .status(400)
-        .json({ error: "You need to provide your fiend Id" });
+        .json({ error: "You need to provide your friend Id" });
     }
     try {
       const addFriend = await prisma.user.update({
@@ -109,6 +113,7 @@ const userController = {
             },
           },
         },
+        select: userFields,
       });
 
       return res.status(200).json(addFriend);
@@ -127,6 +132,7 @@ const userController = {
         where: {
           username: req.params.username,
         },
+        select: userFields,
       });
       if (!user) {
         return res.status(404).json({ error: "User not found" });

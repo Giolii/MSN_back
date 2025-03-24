@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const { userFields } = require("../utils/sanitizeUser");
 
 const conversationController = {
   // Fetch conversations
@@ -20,12 +21,7 @@ const conversationController = {
             },
             include: {
               user: {
-                select: {
-                  id: true,
-                  username: true,
-                  name: true,
-                  avatar: true,
-                },
+                select: userFields,
               },
             },
           },
@@ -33,7 +29,6 @@ const conversationController = {
         orderBy: {
           updatedAt: "desc",
         },
-        take: 50,
       });
 
       return res.status(200).json(result);
@@ -79,15 +74,7 @@ const conversationController = {
           participants: {
             include: {
               user: {
-                select: {
-                  id: true,
-                  username: true,
-                  name: true,
-                  avatar: true,
-                  email: true,
-                  createdAt: true,
-                  aboutMe: true,
-                },
+                select: userFields,
               },
             },
           },
@@ -98,12 +85,7 @@ const conversationController = {
             take: 100,
             include: {
               sender: {
-                select: {
-                  id: true,
-                  username: true,
-                  name: true,
-                  avatar: true,
-                },
+                select: userFields,
               },
             },
           },
@@ -173,11 +155,9 @@ const conversationController = {
               },
             },
           },
-          include: {
-            participants: true, // Add this if you need participant details
-          },
         });
-        // Does work the left at implementation?
+
+        // Frontend should redirect to existing conversation
         if (existingConversation) {
           return res.status(403).json({
             error: "The conversation with the user already exists",
@@ -188,7 +168,6 @@ const conversationController = {
       const result = await prisma.$transaction(async (tx) => {
         const conversation = await tx.conversation.create({
           data: {
-            // name: participants.length === 1 ? participants[0].username : name,
             name: name,
             isGroup,
           },
@@ -210,12 +189,7 @@ const conversationController = {
               where: { leftAt: null },
               include: {
                 user: {
-                  select: {
-                    id: true,
-                    username: true,
-                    name: true,
-                    avatar: true,
-                  },
+                  select: userFields,
                 },
               },
             },
@@ -245,8 +219,8 @@ const conversationController = {
       });
       if (!conversation) {
         return res
-          .status(400)
-          .json({ error: "THis conversation doesn't exist" });
+          .status(404)
+          .json({ error: "This conversation doesn't exist" });
       }
 
       const existingRecord = await prisma.userConversation.findUnique({
@@ -285,61 +259,6 @@ const conversationController = {
     }
   },
 
-  // Mistake, already had one with same thing
-  async removeUser(req, res) {
-    const { conversationId, userToRemove } = req.body;
-    try {
-      if (!conversationId || !userToRemove) {
-        return res
-          .status(400)
-          .json({ error: "You have to provide a conversationId and a user" });
-      }
-
-      const existingRecord = await prisma.userConversation.findUnique({
-        where: {
-          userId_conversationId: {
-            userId: userToRemove.id,
-            conversationId: req.body.conversationId,
-          },
-        },
-      });
-
-      if (existingRecord?.leftAt) {
-        return res.status(400).json({ error: "You removed already this user" });
-      }
-
-      const adminCheck = await prisma.userConversation.findUnique({
-        where: {
-          userId_conversationId: {
-            userId: req.user.id,
-            conversationId: conversationId,
-          },
-        },
-      });
-      if (!adminCheck || !adminCheck.isAdmin) {
-        return res.status(403).json({ error: "Only admins can remove users" });
-      }
-
-      const result = await prisma.userConversation.update({
-        where: {
-          userId_conversationId: {
-            userId: userToRemove.id,
-            conversationId: conversationId,
-          },
-        },
-        data: {
-          leftAt: new Date(),
-        },
-      });
-
-      return res.status(200).json(result);
-    } catch (error) {
-      console.error("Error leaving the conversation", error);
-      return res
-        .status(500)
-        .json({ error: "Failed to leave the conversation" });
-    }
-  },
   // Add participants
   async addPart(req, res) {
     const { conversationId, usersToAdd } = req.body;
@@ -470,7 +389,13 @@ const conversationController = {
         },
       });
 
-      if (!userConv || !userConv.isAdmin) {
+      if (!userConv) {
+        return res
+          .status(404)
+          .json({ error: "You are not part of this conversation" });
+      }
+
+      if (!userConv.isAdmin) {
         return res
           .status(403)
           .json({ error: "Only admins can remove participants" });
@@ -522,7 +447,7 @@ const conversationController = {
     if (!conversationId || !groupName.trim()) {
       return res
         .status(400)
-        .json({ error: "You need to provide ConversationId and new Name" });
+        .json({ error: "You need to provide ConversationId and a new Name" });
     }
 
     if (groupName.trim().length > 100) {
@@ -562,12 +487,7 @@ const conversationController = {
           participants: {
             include: {
               user: {
-                select: {
-                  id: true,
-                  username: true,
-                  name: true,
-                  avatar: true,
-                },
+                select: userFields,
               },
             },
           },

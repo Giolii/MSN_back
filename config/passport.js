@@ -1,5 +1,6 @@
 const passport = require("passport");
 const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
+const { sanitizeUser } = require("../utils/sanitizeUser");
 
 const prisma = require("./prisma");
 
@@ -17,7 +18,7 @@ passport.use(
         },
       });
       if (user) {
-        return done(null, user);
+        return done(null, sanitizeUser(user));
       }
       return done(null, false);
     } catch (error) {
@@ -26,4 +27,4 @@ passport.use(
   })
 );
 
-module.exports = { passport, prisma };
+module.exports = { passport };

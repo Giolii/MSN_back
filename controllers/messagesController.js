@@ -1,5 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const prisma = require("../config/prisma");
+const { userFields } = require("../utils/sanitizeUser");
 
 const messagesController = {
   async fetchMessages(req, res) {
@@ -37,12 +37,7 @@ const messagesController = {
         },
         include: {
           sender: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              avatar: true,
-            },
+            select: userFields,
           },
         },
         orderBy: {
@@ -104,12 +99,7 @@ const messagesController = {
         },
         include: {
           sender: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              avatar: true,
-            },
+            select: userFields,
           },
         },
       });
@@ -193,12 +183,7 @@ const messagesController = {
         },
         include: {
           sender: {
-            select: {
-              id: true,
-              username: true,
-              name: true,
-              avatar: true,
-            },
+            select: userFields,
           },
         },
       });

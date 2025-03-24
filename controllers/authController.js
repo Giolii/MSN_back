@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const randomAvatar = require("../utils/randomAvatar");
 const prisma = require("../config/prisma");
+const { sanitizeUser } = require("../utils/sanitizeUser");
 
 const authController = {
   // Sign Up
@@ -34,11 +35,6 @@ const authController = {
           password: hashedPassword,
           avatar: randomAvatar(),
         },
-        select: {
-          id: true,
-          email: true,
-          username: true,
-        },
       });
 
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
@@ -53,7 +49,7 @@ const authController = {
       });
 
       return res.status(201).json({
-        user,
+        user: sanitizeUser(user),
         token,
       });
     } catch (error) {
@@ -97,7 +93,7 @@ const authController = {
       res.json({
         message: "Login successful",
         token,
-        user,
+        user: sanitizeUser(user),
       });
     } catch (error) {
       res.status(500).json({ error: "Error logging in", error: error.message });
@@ -118,10 +114,13 @@ const authController = {
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
+
+      const { password: _, ...userWithoutPassword } = user;
+
       res.json({
         message: "Login successful",
         token,
-        user,
+        user: userWithoutPassword,
       });
     } catch (error) {
       res.status(500).json({ error: "Error logging in", error: error.message });
@@ -145,7 +144,8 @@ const authController = {
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      res.json({ user });
+
+      res.json({ user: sanitizeUser(user) });
     } catch (error) {
       res
         .status(500)
