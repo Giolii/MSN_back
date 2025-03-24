@@ -9,6 +9,7 @@ const authRoutes = require("./routes/authRoutes");
 const convRoutes = require("./routes/convRoutes");
 const messagesRoutes = require("./routes/messageRoutes");
 const fileRoutes = require("./routes/fileRoutes");
+const userRoutes = require("./routes/userRoutes");
 
 require("./config/passport");
 
@@ -38,16 +39,14 @@ app.use("/auth", authRoutes);
 app.use("/conv", convRoutes);
 app.use("/messages", messagesRoutes);
 app.use("/files", fileRoutes);
+app.use("/user", userRoutes);
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   console.error(err.stack);
-  res
-    .status(statusCode)
-    .json({
-      error:
-        process.env.NODE_ENV === "production" ? "Server error" : err.message,
-    });
+  res.status(statusCode).json({
+    error: process.env.NODE_ENV === "production" ? "Server error" : err.message,
+  });
   res.status(500).send(`Server error`);
 });
 

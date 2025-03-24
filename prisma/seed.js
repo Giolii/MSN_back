@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// Guest account?
+
 async function ensureGlobalConversationExists() {
   try {
     // Check if global conversation with ID "1" already exists
