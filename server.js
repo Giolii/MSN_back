@@ -34,14 +34,20 @@ app.get("/", (req, res) => {
   res.json({ message: "API is running" });
 });
 
-// const authenticateJWT = passport.authenticate("jwt", { session: false });
 app.use("/auth", authRoutes);
 app.use("/conv", convRoutes);
 app.use("/messages", messagesRoutes);
 app.use("/files", fileRoutes);
 
 app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
   console.error(err.stack);
+  res
+    .status(statusCode)
+    .json({
+      error:
+        process.env.NODE_ENV === "production" ? "Server error" : err.message,
+    });
   res.status(500).send(`Server error`);
 });
 

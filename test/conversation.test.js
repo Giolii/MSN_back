@@ -1,6 +1,7 @@
 const request = require("supertest");
 const { createTestApp, createTestUsers, cleanDatabase } = require("./setup");
 const convRoutes = require("../routes/convRoutes");
+const prisma = require("../config/prisma");
 
 describe("Conversation Controller", () => {
   let app, testUsers;
