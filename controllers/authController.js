@@ -2,18 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const randomAvatar = require("../utils/randomAvatar");
-const databaseUrl =
-  process.env.NODE_ENV === "test"
-    ? process.env.TEST_DATABASE_URL
-    : process.env.DATABASE_URL;
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: databaseUrl,
-    },
-  },
-});
+const prisma = require("../config/prisma");
 
 const authController = {
   // Sign Up

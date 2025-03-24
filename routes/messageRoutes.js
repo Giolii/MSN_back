@@ -3,7 +3,6 @@ const router = express.Router();
 const messagesController = require("../controllers/messagesController");
 const passport = require("passport");
 const authenticateJWT = passport.authenticate("jwt", { session: false });
-// ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 
 router.get("/:id", authenticateJWT, messagesController.fetchMessages);
 router.post("/new", authenticateJWT, messagesController.createMessage);

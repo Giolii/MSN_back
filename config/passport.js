@@ -1,19 +1,7 @@
 const passport = require("passport");
 const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt");
-const { PrismaClient, Prisma } = require("@prisma/client");
 
-const databaseUrl =
-  process.env.NODE_ENV === "test"
-    ? process.env.TEST_DATABASE_URL
-    : process.env.DATABASE_URL;
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: databaseUrl,
-    },
-  },
-});
+const prisma = require("./prisma");
 
 const options = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -38,4 +26,4 @@ passport.use(
   })
 );
 
-module.exports = passport;
+module.exports = { passport, prisma };
