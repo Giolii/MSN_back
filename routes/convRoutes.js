@@ -7,7 +7,7 @@ const authenticateJWT = passport.authenticate("jwt", { session: false });
 router.get("/", authenticateJWT, convController.fetchConv);
 router.post("/new", authenticateJWT, convController.newConv);
 router.post("/leave", authenticateJWT, convController.leaveConv);
-router.post("/add", authenticateJWT, convController.addPart);
+router.put("/addParticipants", authenticateJWT, convController.addPart);
 router.post("/remove", authenticateJWT, convController.removePart);
 router.get("/:id", authenticateJWT, convController.fetchSingleConv);
 router.post("/editName", authenticateJWT, convController.editConvName);

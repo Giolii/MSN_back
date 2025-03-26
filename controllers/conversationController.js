@@ -261,16 +261,16 @@ const conversationController = {
 
   // Add participants
   async addPart(req, res) {
-    const { conversationId, usersToAdd } = req.body;
+    const { conversationId, userToAdd } = req.body;
 
     if (!conversationId) {
       return res
         .status(400)
         .json({ error: "You have to provide a conversationId" });
     }
-    if (!usersToAdd || !Array.isArray(usersToAdd) || usersToAdd.length === 0) {
+    if (!userToAdd) {
       return res.status(400).json({
-        error: "usersToAdd must be a non-empty array of user IDs",
+        error: "You have to provide an User ID ",
       });
     }
 
@@ -303,47 +303,61 @@ const conversationController = {
           .json({ error: "Only a memeber admin can add participants" });
       }
 
-      const usersExist = await prisma.user.findMany({
+      const userExist = await prisma.user.findUnique({
         where: {
-          id: { in: usersToAdd },
+          id: userToAdd,
         },
-        select: { id: true },
       });
-      if (usersExist.length !== usersToAdd.length) {
+      if (!userExist) {
         return res.status(400).json({
-          error: "One or more users to add do not exist",
+          error: "The User you want to add doesn't exist",
         });
       }
 
-      const existingMembers = await prisma.userConversation.findMany({
+      const existingMember = await prisma.userConversation.findUnique({
         where: {
-          conversationId: conversationId,
-          userId: { in: usersToAdd },
-          leftAt: null,
+          userId_conversationId: {
+            conversationId: conversationId,
+            userId: userToAdd,
+          },
         },
-        select: { userId: true },
       });
 
-      const existingMemberIds = existingMembers.map((member) => member.userId);
-      const usersToActuallyAdd = usersToAdd.filter(
-        (userId) => !existingMemberIds.includes(userId)
-      );
+      if (existingMember && existingMember.leftAt) {
+        const updatedUser = await prisma.userConversation.update({
+          where: {
+            userId_conversationId: {
+              conversationId: conversationId,
+              userId: userToAdd,
+            },
+          },
+          data: {
+            leftAt: null,
+          },
+        });
+        return res.status(200).json(existingMember);
+      }
 
-      if (usersToActuallyAdd.length === 0) {
+      if (existingMember && !existingMember.leftAt) {
         return res.status(400).json({
-          error: "All specified users are already in the conversation",
+          error: "The user is already in the conversation",
         });
       }
 
-      await prisma.userConversation.createMany({
-        data: usersToActuallyAdd.map((userId) => ({
-          userId: userId,
+      const newUserConversation = await prisma.userConversation.create({
+        data: {
+          userId: userToAdd,
           conversationId: conversationId,
           isAdmin: false,
-        })),
+        },
+        include: {
+          user: {
+            select: userFields,
+          },
+        },
       });
 
-      return res.status(200).json({ message: "Users added successfully" });
+      return res.status(200).json(newUserConversation);
     } catch (error) {
       console.error("Error updating the users of the conversation", error);
       return res

@@ -53,12 +53,7 @@ const messagesController = {
   },
 
   async createMessage(req, res) {
-    const {
-      content,
-      conversationId,
-      notification = false,
-      imageUrl,
-    } = req.body;
+    const { content, conversationId, notification = "", imageUrl } = req.body;
     if ((!content && !imageUrl) || !conversationId) {
       return res
         .status(400)
