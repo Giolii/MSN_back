@@ -250,6 +250,45 @@ const conversationController = {
         },
       });
 
+      // If you Leave without Admins just make one
+
+      const conversationCheck = await prisma.conversation.findUnique({
+        where: {
+          id: req.body.conversationId,
+        },
+        include: {
+          participants: true,
+        },
+      });
+
+      if (
+        conversationCheck &&
+        conversationCheck.isGroup &&
+        conversationCheck.participants.length > 0 &&
+        conversationCheck.participants.every(
+          (participant) => participant.isAdmin === false || participant.leftAt
+        )
+      ) {
+        const newAdmin = await prisma.userConversation.findFirst({
+          where: {
+            conversationId: req.body.conversationId,
+            isAdmin: false,
+          },
+        });
+
+        await prisma.userConversation.update({
+          where: {
+            userId_conversationId: {
+              userId: newAdmin.userId,
+              conversationId: req.body.conversationId,
+            },
+          },
+          data: {
+            isAdmin: true,
+          },
+        });
+      }
+
       return res.status(200).json(result);
     } catch (error) {
       console.error("Error leaving the conversation", error);
