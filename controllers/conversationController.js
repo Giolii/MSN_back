@@ -16,11 +16,19 @@ const conversationController = {
         },
         include: {
           participants: {
-            where: {
-              leftAt: null,
-            },
             include: {
               user: {
+                select: userFields,
+              },
+            },
+          },
+          messages: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 100,
+            include: {
+              sender: {
                 select: userFields,
               },
             },
@@ -251,7 +259,6 @@ const conversationController = {
       });
 
       // If you Leave without Admins just make one
-
       const conversationCheck = await prisma.conversation.findUnique({
         where: {
           id: req.body.conversationId,
