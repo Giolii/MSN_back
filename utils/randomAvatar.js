@@ -33,4 +33,30 @@ const randomAvatar = () => {
   return avatars[randomIndex];
 };
 
-module.exports = randomAvatar;
+const randomGroupAvatar = () => {
+  const avatars = [
+    "https://cdn2.vectorstock.com/i/1000x1000/71/51/glowing-neon-line-friends-forever-icon-isolated-vector-38737151.jpg",
+    "https://media.gettyimages.com/id/1824030565/vector/team-glowing-neon-icon-on-brick-wall-background.jpg?s=1024x1024&w=gi&k=20&c=Nq8Y1Hu1-jnMKBhNzac6HQqGa0SHdxe2lupVImK0ttw=",
+    "https://as2.ftcdn.net/jpg/02/65/16/95/1000_F_265169575_MMe4udkLLTXMKs2CZxAM8YnwUqrKnPj0.jpg",
+    "https://www.shutterstock.com/image-vector/friends-hands-on-shoulders-neon-260nw-1404989081.jpg",
+    "https://media.istockphoto.com/id/1093810834/vector/friendship-of-classmates-icon-elements-of-friendship-in-neon-style-icons-simple-icon-for.jpg?s=612x612&w=is&k=20&c=A7LoPh77wR0K4SazusL30ztIj1IXl-yx0MncJm6KsK8=",
+    "https://as2.ftcdn.net/jpg/02/43/22/31/1000_F_243223167_jVCMxNVbKBGkfPLdcraEZQswRgGADfmm.jpg",
+    "https://www.shutterstock.com/image-vector/two-friends-embracing-neon-sign-260nw-1477898204.jpg",
+    "https://www.shutterstock.com/image-vector/community-friendship-outline-blue-neon-260nw-1598094178.jpg",
+    "https://i.pinimg.com/474x/ed/61/e4/ed61e490ee729f155ecb23b57fca1f6a.jpg",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQoPtNHoDRM7jD_76P-F8ai8ynrVAn_7mPvZQ&s",
+    "https://media.istockphoto.com/id/1198097771/vector/girls-friendship-outline-blue-neon-icon-elements-of-friendship-line-icon-signs-symbols-and.jpg?s=612x612&w=is&k=20&c=7EAC6yuGoXnUX9TaXCeEGPj7V6UwcNPzhW_hS8Y1ugs=",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQadRFLRDDJ-kCaQqbJqBMncyy_POnFMNYAlA&s",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWz3F7WGia6sbyZMiZ4FTnwGS_tRiG1a_eiw&s",
+    "https://thumbs.dreamstime.com/b/school-friends-icon-elements-friendship-neon-style-icons-simple-icon-websites-web-design-mobile-app-info-graphics-school-136556547.jpg",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCAvYOyXwpFzjlodTj0cGUx3db5LSI9lXTXQ&s",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQsRfnF_Kve4Ffixicsh0hiEs8xK-sVP98E-w&s",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdRMO6DfXlCxB0U60TBBdg992goQNKVQiSog&s",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQj8x3B8Hm1up7qxYE__2_CvTkz7C8oVnlhZw&s",
+  ];
+
+  const randomIndex = Math.floor(Math.random() * avatars.length);
+  return avatars[randomIndex];
+};
+
+module.exports = { randomAvatar, randomGroupAvatar };

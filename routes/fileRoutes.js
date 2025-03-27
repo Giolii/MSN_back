@@ -29,6 +29,12 @@ router.post(
   fileController.fileUpload
 );
 router.post(
+  "/groupAvatar",
+  authenticateJWT,
+  upload.single("avatar"),
+  fileController.groupAvatarUpload
+);
+router.post(
   "/image",
   authenticateJWT,
   upload.single("avatar"),

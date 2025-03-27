@@ -1,5 +1,6 @@
 const prisma = require("../config/prisma");
 const { userFields } = require("../utils/sanitizeUser");
+const { randomGroupAvatar } = require("../utils/randomAvatar");
 
 const conversationController = {
   // Fetch conversations
@@ -178,6 +179,7 @@ const conversationController = {
           data: {
             name: name,
             isGroup,
+            ...(isGroup ? { groupAvatar: randomGroupAvatar() } : {}),
           },
         });
 

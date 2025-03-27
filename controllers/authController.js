@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const randomAvatar = require("../utils/randomAvatar");
+const { randomAvatar } = require("../utils/randomAvatar");
 const prisma = require("../config/prisma");
 const { sanitizeUser } = require("../utils/sanitizeUser");
 

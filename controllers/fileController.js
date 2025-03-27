@@ -81,6 +81,43 @@ const fileController = {
       return res.status(500).json({ message: "Failed to upload Image" });
     }
   },
+
+  async groupAvatarUpload(req, res) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      if (!req.body.conversationId) {
+        return res.status(400).json({ message: "No conversation ID provided" });
+      }
+      const conversationId = req.body.conversationId;
+
+      const fileExtension = path.extname(req.file.originalname);
+      const fileName = `avatars/${conversationId}/${uuidv4()}${fileExtension}`;
+
+      const uploadParams = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: fileName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      };
+
+      await s3Client.send(new PutObjectCommand(uploadParams));
+
+      // Generate the permanent S3 URL (public through bucket policy)
+      const avatarUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+
+      const updatedConversation = await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { groupAvatar: avatarUrl },
+      });
+
+      return res.status(200).json(updatedConversation);
+    } catch (error) {
+      console.error("Group avatar upload error:", error);
+      return res.status(500).json({ message: "Failed to upload group avatar" });
+    }
+  },
 };
 
 module.exports = fileController;
