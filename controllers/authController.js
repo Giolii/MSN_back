@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const { randomAvatar } = require("../utils/randomAvatar");
 const prisma = require("../config/prisma");
 const { sanitizeUser } = require("../utils/sanitizeUser");
+const checkGlobalConversation = require("../utils/checkGlobalConversation");
 
 const authController = {
   // Sign Up
@@ -41,29 +42,7 @@ const authController = {
         expiresIn: "7d",
       });
 
-      const globalConversation = await prisma.conversation.findUnique({
-        where: {
-          id: "12345",
-        },
-      });
-
-      if (!globalConversation) {
-        await prisma.conversation.create({
-          data: {
-            id: "12345",
-            name: "Global Conversation",
-            isGroup: true,
-          },
-        });
-      }
-
-      const joinGlobalConversation = await prisma.userConversation.create({
-        data: {
-          userId: user.id,
-          conversationId: "12345",
-          isAdmin: true,
-        },
-      });
+      checkGlobalConversation(user);
 
       return res.status(201).json({
         user: sanitizeUser(user),
@@ -120,14 +99,27 @@ const authController = {
   // Guest
   async guest(req, res) {
     try {
-      const user = await prisma.user.findUnique({
+      if (req.user) {
+        return res.status(403).json({ message: "You are logged in already" });
+      }
+      let user = await prisma.user.findUnique({
         where: {
           username: "Guest",
         },
       });
       if (!user) {
-        return res.status(401).json({ error: "Guest not found" });
+        user = await prisma.user.create({
+          data: {
+            name: "Guest",
+            username: "Guest",
+            avatar: randomAvatar(),
+            email: "guest@guest.com",
+            password: "xxxxxx",
+          },
+        });
+        checkGlobalConversation(user);
       }
+
       const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
         expiresIn: "7d",
       });
