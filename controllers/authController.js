@@ -41,10 +41,27 @@ const authController = {
         expiresIn: "7d",
       });
 
-      const globalConversation = await prisma.userConversation.create({
+      const globalConversation = await prisma.conversation.findUnique({
+        where: {
+          id: "12345",
+        },
+      });
+
+      if (!globalConversation) {
+        await prisma.conversation.create({
+          data: {
+            id: "12345",
+            name: "Global Conversation",
+            isGroup: true,
+          },
+        });
+      }
+
+      const joinGlobalConversation = await prisma.userConversation.create({
         data: {
           userId: user.id,
-          conversationId: "1",
+          conversationId: "12345",
+          isAdmin: true,
         },
       });
 
@@ -115,12 +132,10 @@ const authController = {
         expiresIn: "7d",
       });
 
-      const { password: _, ...userWithoutPassword } = user;
-
       res.json({
         message: "Login successful",
         token,
-        user: userWithoutPassword,
+        user: sanitizeUser(user),
       });
     } catch (error) {
       res.status(500).json({ error: "Error logging in", error: error.message });

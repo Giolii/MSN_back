@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+require("dotenv").config();
 const express = require("express");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
@@ -29,7 +29,7 @@ const createTestUsers = async () => {
     data: {
       email: "test1@example.com",
       username: "testuser1",
-      password: "password123", // In a real app, hash this
+      password: "password123",
     },
   });
   const user2 = await prisma.user.create({

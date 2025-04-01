@@ -5,10 +5,9 @@ const passport = require("passport");
 const authenticateJWT = passport.authenticate("jwt", { session: false });
 
 router.get("/all", authenticateJWT, userController.allUsers);
-router.post("/admin", authenticateJWT, userController.becomeAdmin);
-router.post("/update", authenticateJWT, userController.updateProfile);
+router.put("/admin", authenticateJWT, userController.becomeAdmin);
+router.put("/update", authenticateJWT, userController.updateProfile);
 router.post("/addFriend", authenticateJWT, userController.addFriend);
 router.post("/removeFriend", authenticateJWT, userController.removeFriend);
-router.get("/:username", authenticateJWT, userController.checkUsername);
 
 module.exports = router;

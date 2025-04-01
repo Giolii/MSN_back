@@ -123,27 +123,7 @@ const userController = {
       });
     }
   },
-  async checkUsername(req, res) {
-    if (!req.params.username) {
-      return res.status(400).json({ error: "You need to provide an username" });
-    }
-    try {
-      const user = await prisma.user.findUnique({
-        where: {
-          username: req.params.username,
-        },
-        select: userFields,
-      });
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      return res.status(200).json(user);
-    } catch (error) {
-      res.status(500).json({
-        error: "Error during checking username",
-      });
-    }
-  },
+
   async becomeAdmin(req, res) {
     const { conversationId, participantId } = req.body;
     try {

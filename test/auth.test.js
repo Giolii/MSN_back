@@ -85,23 +85,4 @@ describe("Auth Controller", () => {
       expect(response.status).toBe(401);
     });
   });
-  describe("GET /auth/:username", () => {
-    it("should check username if it exists", async () => {
-      const response = await request(app)
-        .get(`/auth/${testUsers.user1.username}`)
-        .set("Authorization", `Bearer ${testUsers.token2}`);
-
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty("username");
-      expect(response.body.username).toBe(testUsers.user1.username);
-    });
-    it("should retunr error if username doesnt exist", async () => {
-      const response = await request(app)
-        .get(`/auth/hjgdfskajghsdajgfajshgdfajfjgdsah`)
-        .set("Authorization", `Bearer ${testUsers.token2}`);
-
-      expect(response.status).toBe(404);
-      expect(response.body).not.toHaveProperty("username");
-    });
-  });
 });
