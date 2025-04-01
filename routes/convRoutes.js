@@ -9,7 +9,7 @@ router.post("/new", authenticateJWT, convController.newConv);
 router.post("/leave", authenticateJWT, convController.leaveConv);
 router.put("/addParticipants", authenticateJWT, convController.addPart);
 router.post("/remove", authenticateJWT, convController.removePart);
-router.get("/:id", authenticateJWT, convController.fetchSingleConv);
 router.put("/editName", authenticateJWT, convController.editConvName);
+router.get("/:id", authenticateJWT, convController.fetchSingleConv);
 
 module.exports = router;
