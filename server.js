@@ -47,7 +47,6 @@ app.use((err, req, res, next) => {
   res.status(statusCode).json({
     error: process.env.NODE_ENV === "production" ? "Server error" : err.message,
   });
-  res.status(500).send(`Server error`);
 });
 
 app.listen(port, () => {
